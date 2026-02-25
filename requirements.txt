@@ -1,0 +1,8 @@
+fastapi
+cassandra-driver
+uvicorn
+pydantic
+celery
+redis
+networkx
+cqlsh 
