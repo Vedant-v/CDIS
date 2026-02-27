@@ -1,6 +1,10 @@
 from app.db.cassandra import get_session
 from uuid import UUID
-from datetime import datetime, date
+from datetime import datetime
+import redis
+import os
+
+redis_client = redis.Redis(host=os.getenv("REDIS_HOST", "redis"), port=6379, db=0)
 
 INSERT_OPINION = """
 INSERT INTO opinions_by_claim
@@ -47,3 +51,10 @@ def insert_opinion(
     VALUES (%s, %s, %s, %s, %s)
     IF NOT EXISTS
     """, (domain, agent_id, 0.5, 0.0, 0.5))
+
+    # Strict domain epoch batching - option B
+    # Mark the domain as dirty so the periodic epoch coordinator scheduler can pick it up
+    try:
+        redis_client.set(f"domain_dirty:{domain}", 1)
+    except Exception as e:
+        pass # In production, log this correctly

@@ -34,6 +34,34 @@ def fetch_recent_opinions(claim_id: UUID):
 
     return all_rows
 
+FETCH_OPINIONS_LT = """
+SELECT agent_id, alpha, beta, domain, cluster_id
+FROM opinions_by_claim
+WHERE claim_id = %s
+"""
+
+def fetch_opinions_st(claim_id: UUID, days_back: int = 30):
+    today = datetime.utcnow().date()
+    buckets = [today - timedelta(days=i) for i in range(days_back)]
+
+    all_rows = []
+
+    for b in buckets:
+        rows = get_session().execute(
+            FETCH_OPINIONS,
+            (claim_id, b)
+        )
+        all_rows.extend(rows)
+
+    return all_rows
+
+def fetch_opinions_lt(claim_id: UUID):
+    rows = get_session().execute(
+        FETCH_OPINIONS_LT,
+        (claim_id,)
+    )
+    return list(rows)
+
 def fetch_expertise(domain: str):
     rows = get_session().execute(
         FETCH_EXPERTISE,
